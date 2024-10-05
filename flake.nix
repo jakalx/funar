@@ -35,6 +35,7 @@
               nativeBuildInputs = [ pkgs.haskellPackages.doctest ];
               buildInputs = [
                 pkgs.cabal-install
+                pkgs.haskellPackages.fourmolu
                 pkgs.elmPackages.elm
                 self'.packages.hls
                 self'.formatter
