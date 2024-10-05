@@ -31,6 +31,7 @@
           formatter = pkgs.nixfmt;
           devShells = {
             default = pkgs.haskellPackages.shellFor {
+              name = "funar";
               packages = _: [ hearts haskell-code ];
               nativeBuildInputs = [ pkgs.haskellPackages.doctest ];
               buildInputs = [
