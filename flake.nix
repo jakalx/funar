@@ -61,6 +61,12 @@
                 shellHook = old.shellHook + ''
                   echo -e "\n   All required extensions should be pre-installed and ready."'';
               });
+
+            intro = pkgs.mkShell {
+              name = "funar-intro";
+
+              packages = [ pkgs.racket ];
+            };
           };
 
           packages = {
