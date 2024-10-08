@@ -37,6 +37,8 @@
               buildInputs = [
                 pkgs.cabal-install
                 pkgs.haskellPackages.fourmolu
+                pkgs.haskellPackages.ghcid
+                pkgs.haskellPackages.doctest
                 pkgs.elmPackages.elm
                 self'.packages.hls
                 self'.formatter
