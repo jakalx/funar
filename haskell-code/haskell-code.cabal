@@ -21,4 +21,6 @@ library
   ghc-options:      -fwarn-incomplete-patterns
 
   exposed-modules: Intro
-
+                 , Cards
+                 , GameEvent
+                 , DB
