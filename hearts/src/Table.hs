@@ -61,7 +61,7 @@ emptyTableState players =
 -- True
 gameAtBeginning :: TableState -> Bool
 gameAtBeginning tableState =
-  (trickEmpty (tableStateTrick tableState)) && 
+  (trickEmpty (tableStateTrick tableState)) &&
     (all pileEmpty (Map.elems (tableStatePiles tableState)))
 
 -- | wer ist als nächstes dran?
@@ -145,7 +145,7 @@ replaceIfHigher p1@(marker1, c1) p2@(marker2, c2) =
 whoTakesTrick :: Trick -> Maybe Player
 whoTakesTrick (Trick []) = Nothing
 whoTakesTrick (Trick list) =
-  case reverse list of 
+  case reverse list of
     [] -> Nothing
     (p0 : rest') ->
       let (player, _) = foldl replaceIfHigher p0 rest'
@@ -174,11 +174,11 @@ pileScore pile = sum (map cardScore (pileCards pile))
 gameOver :: TableState -> Maybe Player
 gameOver state =
   if all isHandEmpty (Map.elems (tableStateHands state))
-  then 
+  then
     let playerScores = Map.toList (fmap pileScore (tableStatePiles state))
         cmp (_, score1) (_, score2) = compare score1 score2
     in Just (fst (Foldable.minimumBy cmp playerScores))
-  else 
+  else
     Nothing
 
 -- | Karte ausspielen
@@ -193,7 +193,7 @@ addTrickToPile playerPiles player trick =
   in Map.insert player (pileAddTrick playerPile trick) playerPiles
 
 dealHand :: Player -> Hand -> PlayerHands -> PlayerHands
-dealHand player hand hands = Map.insert player hand hands
+dealHand = Map.insert
 
 -- | Ereignis in den Zustand einarbeiten
 tableProcessEvent :: GameEvent -> TableState -> TableState
@@ -219,3 +219,40 @@ tableProcessEvent (TrickTaken player trick) state =
   }
 tableProcessEvent (IllegalCardAttempted player card) state = state
 tableProcessEvent (GameEnded player) state = state
+
+
+---------------------------------------------------------
+-- data Game a                                         --
+--   = RecordEvent GameEvent (() -> Game a)            --
+--   | GetCommand (GameCommand -> Game a)              --
+--   | IsPlayCardAllowed Player Card (Bool -> Game a)  --
+--   | HasRoundEnded ((Player, Maybe Trick) -> Game a) --
+--   | HasGameEnded (Maybe Player -> Game a)           --
+--   | Return a                                        --
+---------------------------------------------------------
+
+runTable :: Game a -> (TableState, [GameEvent]) -> (Either (GameCommand -> Game a) a, (TableState, [GameEvent]))
+runTable (RecordEvent event cont) (table, events) =
+  runTable (cont ()) (tableProcessEvent event table, event:events)
+runTable (GetCommand cont) state =
+  (Left cont, state)
+runTable (IsPlayCardAllowed player card cont) state@(table, _) =
+  runTable (cont (playValid table player card)) state
+runTable (HasRoundEnded cont) state@(table, events) =
+  let
+    turnTrick = turnOverTrick table :: Maybe (Trick, Player)
+    nextPlayer = maybe (playerAfter table (currentPlayer table)) snd turnTrick :: Player
+    maybeTrick = fst <$> turnTrick :: Maybe Trick
+   in runTable (cont (nextPlayer, maybeTrick)) (table, events)
+runTable (HasGameEnded cont) state@(table, _) =
+  runTable (cont (gameOver table)) state
+runTable (Return result) state = (Right result, state)
+
+-- ab hier bleiben noch diese Dinge, um mit dem Spiel zu arbeiten
+--
+-- - GameEvent
+-- - GameCommand
+-- - TableState (als opaque type, also nicht die Impl)
+-- - emptyTableState, um einen Start zu haben
+-- - runTable
+-- - tableLoopM, um das gesamte Spiel auszuführen

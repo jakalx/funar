@@ -14,8 +14,6 @@ instance Functor f => Applicative (Free f) where
   (Impure fa) <*> aa = Impure (fmap (<*> aa) fa)
 
 instance Functor f => Monad (Free f) where
-    return = Pure
-    
     (Pure a) >>= k = k a
     (Impure r) >>= k = Impure (fmap (>>= k) r)
 

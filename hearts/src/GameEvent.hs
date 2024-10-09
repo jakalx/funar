@@ -66,6 +66,7 @@ playCard p c ... -> playCard (MkPlayerCommand p c) ...
 
 data Game a
   = RecordEvent GameEvent (() -> Game a)
+  | GetCommand (GameCommand -> Game a)
   | IsPlayCardAllowed Player Card (Bool -> Game a)
   | HasRoundEnded ((Player, Maybe Trick) -> Game a)
   | HasGameEnded (Maybe Player -> Game a)
@@ -91,6 +92,7 @@ instance Applicative Game where
 instance Monad Game where
   RecordEvent event callback >>= next =
     RecordEvent event (callback >=> next) -- (\x -> callback x >>= next)
+  GetCommand callback >>= next = GetCommand (callback >=> next)
   IsPlayCardAllowed player card callback >>= next =
     IsPlayCardAllowed player card (callback >=> next)
   HasRoundEnded callback >>= next = HasRoundEnded (callback >=> next)
@@ -138,3 +140,11 @@ tableProcessCommandM (PlayCard player card) =
       else do
         recordEventM (IllegalCardAttempted player card)
         return Nothing
+
+-- gesamtes Spiel spielen
+tableLoopM :: GameCommand -> Game Player
+tableLoopM command = do
+  maybeWinner <- tableProcessCommandM command
+  case maybeWinner of
+    Nothing -> GetCommand tableLoopM
+    Just player -> return player
