@@ -3,7 +3,7 @@ module Cards(Suit(..), Rank(..), Card(..),
              deck, cardOrder,
              Player(..), 
              Hand, makeHand, emptyHand, isHandEmpty, containsCard, removeCard, handCards,
-             Trick(..), emptyTrick,  trickEmpty, addToTrick, cardsOfTrick, leadingCardOfTrick,
+             Trick, emptyTrick,  trickEmpty, addToTrick, cardsOfTrick, leadingCardOfTrick,
              Pile, emptyPile, pileEmpty, pileAddTrick, pileCards,
              allSuits, allRanks)
 where
@@ -59,8 +59,14 @@ cartesianProduct list1 list2 =
 deck :: [Card]
 deck = map (uncurry Card) (cartesianProduct allSuits allRanks)
 
+deck' :: [Card]
+deck' = [ Card suit rank | suit <- allSuits, rank <- allRanks ]
+
+-- >>> length deck'
+-- 52
+
 -- | Karten, die jemand auf der Hand hält
-newtype Hand = Hand { unHand :: Set Card }
+newtype Hand = Hand { unHand :: Set Card } -- Wrapper kostet nichts zur Laufzeit
   deriving (Eq, Show)
 
 makeHand :: [Card] -> Hand
@@ -133,4 +139,6 @@ pileAddTrick pile trick =
 
 pileCards :: Pile -> [Card]
 pileCards pile = Set.toList (unPile pile)
+
+
 
