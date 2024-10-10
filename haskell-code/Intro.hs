@@ -2,7 +2,7 @@
 
 module Intro where
 
-import Prelude hiding (Monoid, Semigroup)
+import Prelude hiding (Monoid, Semigroup, (<>))
 
 import Debug.Trace
 
@@ -201,6 +201,9 @@ data Option a = None
 class Semigroup a where
   op :: a -> a -> a
 
+(<>) :: Semigroup a => a -> a -> a
+(<>) = op
+
 class Semigroup a => Monoid a where
   neutral :: a
 
@@ -296,3 +299,65 @@ instance Functor Option where
   fmap :: (a -> b) -> Option a -> Option b
   fmap f None     = None
   fmap f (Some a) = Some (f a)
+
+
+-- Validation Applicative
+
+type Errors = [String]
+
+data Validation m a = Valid a
+                  | Invalid m
+                  deriving Show
+
+instance Functor (Validation m) where
+  fmap :: (a -> b) -> (Validation m a -> Validation m b)
+  fmap f (Valid a) = Valid (f a)
+  fmap _ (Invalid errors) = Invalid errors
+
+instance Semigroup m => Applicative (Validation m) where
+  pure :: a -> Validation m a
+  pure = Valid
+
+  (<*>) :: Validation m (a -> b) -> Validation m a -> Validation m b
+  Valid f <*> Valid a = Valid (f a)
+  Valid f <*> Invalid errors = Invalid errors
+  Invalid errors <*> Valid a = Invalid errors
+  Invalid e1 <*> Invalid e2 = Invalid (e1 <> e2)
+
+
+-- Aufgabe:
+--   - Applicative instanz
+--   - kleines Beispiel: Person mit Alter und Name, Alter >18, Name <100 Buchstaben
+type PLZ = Int
+data Person = Person String Int PLZ
+  deriving Show
+
+parseName :: String -> Validation Errors String
+parseName name =
+  if length name < 100 then Valid name else Invalid ["name is too long"]
+
+parseAge :: Int -> Validation Errors Int
+parseAge age =
+  if age >= 18 then Valid age else Invalid ["must be at least 18"]
+
+parsePLZ :: Int -> Validation Errors PLZ
+parsePLZ plz =
+  if length (show plz) == 5 then Valid plz else Invalid ["PLZ must have 5 digits"]
+
+-- | pares a person
+--
+-- >>> parsePerson "Alex" 19 29664
+-- Valid (Person "Alex" 19 29664)
+--
+-- >>> parsePerson "Alex" 15 29664
+-- Invalid ["must be at least 18"]
+--
+-- >>> parsePerson "Alex" 15 29
+-- Invalid ["must be at least 18","PLZ must have 5 digits"]
+--
+-- >>> parsePerson (replicate 100 'a') 15 29
+-- Invalid ["name is too long","must be at least 18","PLZ must have 5 digits"]
+parsePerson :: String -> Int -> PLZ -> Validation Errors Person
+parsePerson name age plz =
+  -- Person ::   String ->          Int ->          PLZ        -> Person
+  Person <$> parseName name <*> parseAge age <*> parsePLZ plz
