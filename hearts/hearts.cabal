@@ -29,7 +29,7 @@ library
                      , vector
   hs-source-dirs:      src
   default-language:    Haskell2010
-  ghc-options:      -fwarn-incomplete-patterns
+  ghc-options:      -fwarn-incomplete-patterns -threaded
 
 executable server
   main-is:             Main.hs
@@ -52,7 +52,7 @@ executable server
                      , warp
   hs-source-dirs:      app
   default-language:    Haskell2010
-  ghc-options:      -fwarn-incomplete-patterns
+  ghc-options:      -fwarn-incomplete-patterns -threaded
 
 test-suite hearts-spec
   type:                exitcode-stdio-1.0
@@ -70,4 +70,4 @@ test-suite hearts-spec
                      , hearts
                      , hspec
   default-language:    Haskell2010
-  ghc-options:      -fwarn-incomplete-patterns
+  ghc-options:      -fwarn-incomplete-patterns -threaded
