@@ -40,6 +40,7 @@
                 pkgs.haskellPackages.ghcid
                 pkgs.haskellPackages.doctest
                 pkgs.elmPackages.elm
+                pkgs.elmPackages.elm-language-server
                 self'.packages.hls
                 self'.formatter
               ];
